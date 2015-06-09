@@ -13,6 +13,8 @@ var db = Bookshelf.initialize({
   }
 });
 
+
+
 db.knex.schema.hasTable('urls').then(function(exists) {
   if (!exists) {
     db.knex.schema.createTable('urls', function (link) {
@@ -44,6 +46,34 @@ db.knex.schema.hasTable('clicks').then(function(exists) {
 /************************************************************/
 // Add additional schema definitions below
 /************************************************************/
+
+db.knex.schema.hasTable('users').then(function(exists) {
+  if (!exists) {
+    db.knex.schema.createTable('users', function (user) {
+      user.increments('uid').primary();
+      user.string('username', 255);
+      user.string('password', 255);
+      user.string('salt', 255);
+    }).then(function (table) {
+      console.log('Created Table', table);
+    });
+  }
+});
+
+
+//intermediate table urls_users
+db.knex.schema.hasTable('urls_users').then(function(exists) {
+  if (!exists) {
+    db.knex.schema.createTable('urls_users', function (link) {
+      link.integer('url_id').primary().references('id').inTable('urls');
+      link.integer('uid', 255).references('uid').inTable('users');
+      link.timestamps();
+    }).then(function (table) {
+      console.log('Created Table', table);
+    });
+  }
+}); //add foreign key
+
 
 
 module.exports = db;
