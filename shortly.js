@@ -14,6 +14,7 @@ var Click = require('./app/models/click');
 
 var app = express();
 
+
 //app.use(bodyParser);
 //app.use(cookieParser('shhhh, very secret'));
 app.use(session({secret: '<mysecret>',
@@ -70,11 +71,24 @@ function(req, res, next) {
   //   res.redirect('/login');
   // }
 
+  // orig
+  // Links.reset().fetch().then(function(links) {
+  //   res.send(200, links.models);
+  // });
 
-  Links.reset().fetch().then(function(links) {
-    res.send(200, links.models);
-  });
+// console.log(Links);
+// console.log(Links.models);
+// console.log(Links.model);
 
+// Links.query(function(q){
+//   q.where('urls_users', 'uid',)
+// })
+
+Links.reset().query({ where: {id: 8},  }).fetch({withRelated: ['users'] , debug: true } ).then(function(links) {
+
+  console.log("INside link , ", links)
+  res.send(200, links.models);
+});
 
 });
 
@@ -102,18 +116,31 @@ function(req, res) {
           base_url: req.headers.origin,
         });
 
-        console.log("DB KNEX is, ", db.knex)
-        db.knex('urls_users').insert({}).then(function(data){
-          console.log("DATA, ", data);
-        }).catch(function(err){
-          console.log("ERR, ", err);
-        });
-        // db.knex.insert({uid: 10, url_id: 'xyz'}).into('urls_users');
-
         link.save().then(function(newLink) {
           Links.add(newLink);
           res.send(200, newLink);
         });
+
+
+
+        var url_id = link.get('id')
+        var user_id;
+        db.knex('users').where({username: req.session.user}).select('uid')
+                        .then(function(data){
+                              user_id = data[0].uid
+                              console.log("user_id uid", user_id)
+
+                              db.knex('urls_users').insert({uid: user_id, url_id: url_id}).then(function(data){
+                                console.log("DATA, ", data);
+                              }).catch(function(err){
+                                console.log("ERR, ", err);
+                              });
+
+                        }).catch(function(err){
+                          console.log("ERR, ", err);
+                        });
+
+
       });
     }
   });
@@ -153,32 +180,10 @@ function(req, res, next) {
     }
   })
 
-
-  // TABLE:
-  // USER: UID, username/password
-  // URLS: link_id, URLs, 1 UID, clicks
-  // CLICKS: CID, REF link_ID,
-
-  // 2. Log user in
-  // 3. Redirect to Index page
-  // 4. Query for USER links
-  //
-  // Need: Logout button
-
-  //res.render('signup');
-
 });
 
 app.post('/login',
 function(req, res, next) {
-
-  // Find user in user table.
-  // Find salt
-  // hash with password
-  // Compare password to hash
-  // Then assign session to username
-  // Route to index page.
-
   Users.reset().fetch().then(function(users){
 
     var found = false;
