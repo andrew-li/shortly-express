@@ -102,7 +102,13 @@ function(req, res) {
           base_url: req.headers.origin,
         });
 
-        db.knex('urls_users').insert({uid: 10, url_id: 'xyz'})
+        console.log("DB KNEX is, ", db.knex)
+        db.knex('urls_users').insert({}).then(function(data){
+          console.log("DATA, ", data);
+        }).catch(function(err){
+          console.log("ERR, ", err);
+        });
+        // db.knex.insert({uid: 10, url_id: 'xyz'}).into('urls_users');
 
         link.save().then(function(newLink) {
           Links.add(newLink);
